@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,7 +125,9 @@ class Jackson2Tokenizer {
 
 		while (true) {
 			JsonToken token = this.parser.nextToken();
-			if (token == null || token == JsonToken.NOT_AVAILABLE) {
+			// SPR-16151: Smile data format uses null to separate documents
+			if ((token == JsonToken.NOT_AVAILABLE) ||
+					(token == null && (token = this.parser.nextToken()) == null)) {
 				break;
 			}
 			updateDepth(token);
@@ -173,8 +175,9 @@ class Jackson2Tokenizer {
 			this.tokenBuffer.copyCurrentEvent(this.parser);
 		}
 
-		if ((token == JsonToken.END_OBJECT &&  this.objectDepth == 0 && (this.arrayDepth == 1 || this.arrayDepth == 0)) ||
-				(token.isScalarValue()) && this.objectDepth == 0 && this.arrayDepth == 0) {
+		if (this.objectDepth == 0 &&
+				(this.arrayDepth == 0 || this.arrayDepth == 1) &&
+				(token == JsonToken.END_OBJECT || token.isScalarValue())) {
 			result.add(this.tokenBuffer);
 			this.tokenBuffer = new TokenBuffer(this.parser);
 		}

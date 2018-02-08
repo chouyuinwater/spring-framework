@@ -14,29 +14,32 @@
  * limitations under the License.
  */
 
-package org.springframework.core.convert.support;
+package org.springframework.format.datetime.standard;
 
+import java.text.ParseException;
+import java.time.Year;
 import java.util.Locale;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.util.StringUtils;
+import org.springframework.format.Formatter;
 
 /**
- * Converts from a String to a {@link java.util.Locale}.
+ * {@link Formatter} implementation for a JSR-310 {@link Year},
+ * following JSR-310's parsing rules for a Year.
  *
- * <p>Accepts the classic {@link Locale} String format ({@link Locale#toString()})
- * as well as BCP 47 language tags ({@link Locale#forLanguageTag} on Java 7+).
- *
- * @author Keith Donald
  * @author Juergen Hoeller
- * @since 3.0
- * @see StringUtils#parseLocale
+ * @since 5.0.4
+ * @see Year#parse
  */
-final class StringToLocaleConverter implements Converter<String, Locale> {
+class YearFormatter implements Formatter<Year> {
 
 	@Override
-	public Locale convert(String source) {
-		return StringUtils.parseLocale(source);
+	public Year parse(String text, Locale locale) throws ParseException {
+		return Year.parse(text);
+	}
+
+	@Override
+	public String print(Year object, Locale locale) {
+		return object.toString();
 	}
 
 }

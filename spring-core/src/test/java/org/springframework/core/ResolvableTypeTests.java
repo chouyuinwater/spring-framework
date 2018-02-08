@@ -43,6 +43,7 @@ import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -64,6 +65,7 @@ import static org.mockito.BDDMockito.*;
  *
  * @author Phillip Webb
  * @author Juergen Hoeller
+ * @author Sebastien Deleuze
  */
 @SuppressWarnings("rawtypes")
 @RunWith(MockitoJUnitRunner.class)
@@ -259,6 +261,19 @@ public class ResolvableTypeTests {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("MethodParameter must not be null");
 		ResolvableType.forMethodParameter(null);
+	}
+
+	@Test  // SPR-16210
+	public void forMethodParameterWithSameSignatureAndGenerics() throws Exception {
+		Method method = Methods.class.getMethod("list1");
+		MethodParameter methodParameter = MethodParameter.forExecutable(method, -1);
+		ResolvableType type = ResolvableType.forMethodParameter(methodParameter);
+		assertThat(((MethodParameter)type.getSource()).getMethod(), equalTo(method));
+
+		method = Methods.class.getMethod("list2");
+		methodParameter = MethodParameter.forExecutable(method, -1);
+		type = ResolvableType.forMethodParameter(methodParameter);
+		assertThat(((MethodParameter)type.getSource()).getMethod(), equalTo(method));
 	}
 
 	@Test
@@ -1323,6 +1338,15 @@ public class ResolvableTypeTests {
 		assertTrue(setClass.isAssignableFrom(fromReturnType));
 	}
 
+	@Ignore
+	@Test
+	public void testSpr16456() throws Exception {
+		ResolvableType genericType = ResolvableType.forField(
+				UnresolvedWithGenerics.class.getDeclaredField("set")).asCollection();
+		ResolvableType type = ResolvableType.forClassWithGenerics(ArrayList.class, genericType.getGeneric());
+		assertThat(type.resolveGeneric(), equalTo(Integer.class));
+	}
+
 
 	private ResolvableType testSerialization(ResolvableType type) throws Exception {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -1439,6 +1463,10 @@ public class ResolvableTypeTests {
 		T typedReturn();
 
 		Set<?> wildcardSet();
+
+		List<String> list1();
+
+		List<String> list2();
 	}
 
 
@@ -1617,6 +1645,12 @@ public class ResolvableTypeTests {
 	public class BaseProvider<BT extends IBase<BT>> implements IProvider<IBase<BT>> {
 
 		public Collection<IBase<BT>> stuff;
+	}
+
+
+	public abstract class UnresolvedWithGenerics {
+
+		Set<Integer> set;
 	}
 
 }

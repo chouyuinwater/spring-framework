@@ -14,29 +14,32 @@
  * limitations under the License.
  */
 
-package org.springframework.core.convert.support;
+package org.springframework.format.datetime.standard;
 
+import java.text.ParseException;
+import java.time.Month;
 import java.util.Locale;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.util.StringUtils;
+import org.springframework.format.Formatter;
 
 /**
- * Converts from a String to a {@link java.util.Locale}.
+ * {@link Formatter} implementation for a JSR-310 {@link Month},
+ * resolving a given String against the Month enum values (ignoring case).
  *
- * <p>Accepts the classic {@link Locale} String format ({@link Locale#toString()})
- * as well as BCP 47 language tags ({@link Locale#forLanguageTag} on Java 7+).
- *
- * @author Keith Donald
  * @author Juergen Hoeller
- * @since 3.0
- * @see StringUtils#parseLocale
+ * @since 5.0.4
+ * @see Month#valueOf
  */
-final class StringToLocaleConverter implements Converter<String, Locale> {
+class MonthFormatter implements Formatter<Month> {
 
 	@Override
-	public Locale convert(String source) {
-		return StringUtils.parseLocale(source);
+	public Month parse(String text, Locale locale) throws ParseException {
+		return Month.valueOf(text.toUpperCase());
+	}
+
+	@Override
+	public String print(Month object, Locale locale) {
+		return object.toString();
 	}
 
 }
